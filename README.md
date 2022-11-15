@@ -10,7 +10,7 @@
 
 - Deployed on Heroku.
 - Stores data in MongoDB
-- APIs that enable CRUD functionalities (for more information please see image below)
+- APIs that enable CRUD functionalities (for more information please see the bottom image)
 - Added a layer of security with bcrypt and JWT
 
 ### Jasmine-node Test:
@@ -21,6 +21,6 @@
 - Screenshot of testing:
   ![jasmine-node-test-result-image](/jasmine-node_screenshot.png)
 
-### APIs
+### APIs Implemented
 
 ![apis](/APIs.png)
