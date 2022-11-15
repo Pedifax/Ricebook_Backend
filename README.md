@@ -2,7 +2,7 @@
 
 ### Links
 
-- Deployed Backend: [Heroku](https://comp531-hw6-backend-bk52.herokuapp.com/)(Please don't attack me)
+- Deployed backend: [Heroku](https://comp531-hw6-backend-bk52.herokuapp.com/)
 - Deployed forntend site: [Surge](http://ricebook-hw6-bk52.surge.sh/)
 - Frontend repo: [Github](https://github.com/Pedifax/Social-Network-Application)
 
