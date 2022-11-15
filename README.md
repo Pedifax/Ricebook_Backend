@@ -21,6 +21,12 @@
 - Screenshot of testing:
   ![jasmine-node-test-result-image](/jasmine-node_screenshot.png)
 
+### Next Steps (ETA Dec. 1st)
+- Connect with the frontend 
+- Incorporate AWS S3 for image storage
+- Incorporate Redis caching store
+- Ready to crowd's usage
+
 ### APIs Implemented
 
 ![apis](/APIs.png)
