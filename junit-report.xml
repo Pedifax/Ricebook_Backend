@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites>
+<testsuite name="Backend tests:" errors="0" tests="8" failures="0" time="1.63" timestamp="2022-11-14T21:56:12">
+  <testcase classname="Backend tests:" name="Register a new user named = testUser with password = 123" time="0.415"></testcase>
+  <testcase classname="Backend tests:" name="Log in as testUser" time="0.145"></testcase>
+  <testcase classname="Backend tests:" name="Create a new article and verify that the article was added (POST /article and GET /articles)" time="0.548"></testcase>
+  <testcase classname="Backend tests:" name="Get articles from testUser (GET /articles/id, where id = username)" time="0.098"></testcase>
+  <testcase classname="Backend tests:" name="Get an article with post id (GET /articles/id, where id = post id, which we just created)" time="0.09"></testcase>
+  <testcase classname="Backend tests:" name="Update the status headline and verify the change (PUT &amp; GET headline)" time="0.149"></testcase>
+  <testcase classname="Backend tests:" name="Log out testUser" time="0.011"></testcase>
+  <testcase classname="Backend tests:" name="clean up" time="0.174"></testcase>
+</testsuite>
+</testsuites>
