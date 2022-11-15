@@ -8,14 +8,19 @@
 
 ### Features:
 
-- APIs that enable CRUD functionalities
+- Deployed on Heroku.
 - Stores data in MongoDB
+- APIs that enable CRUD functionalities (for more information please see image below)
 - Added a layer of security with bcrypt and JWT
-  ![apis](/APIs.png)
 
 ### Jasmine-node Test:
 
 - Tested basic behaviors as shown below. More to come.
 - Testing script <code>test.spec.js</code> locates in [/spec]()
 - A [JUnit report]() is included
+- Screenshot of testing:
   ![jasmine-node-test-result-image](/jasmine-node_screenshot.png)
+
+### APIs
+
+![apis](/APIs.png)
