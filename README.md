@@ -1,10 +1,12 @@
+![image-logo](image-logo.png)
+
 # Social Media Web App 2 - Backend
 
 ### Links
 
-- Deployed backend: [Heroku](https://comp531-hw6-backend-bk52.herokuapp.com/)
-- Deployed forntend site: [Surge](http://ricebook-hw6-bk52.surge.sh/)
-- Frontend repo: [Github](https://github.com/Pedifax/Social-Network-Application)
+- Deployed frontend site: [Surge](https://ricebook-bk.surge.sh/)
+- Frontend repo: [Github](https://github.com/Pedifax/Ricebook_Frontend)
+- Deployed backend: [Heroku](https://final-app.herokuapp.com/)
 
 ### Features:
 
@@ -20,12 +22,6 @@
 - A [JUnit report]() is included
 - Screenshot of testing:
   ![jasmine-node-test-result-image](/jasmine-node_screenshot.png)
-
-### Next Steps (ETA Dec. 1st)
-- Connect with the frontend 
-- Incorporate AWS S3 for image storage
-- Incorporate Redis caching store
-- Ready for crowd's usage
 
 ### APIs Implemented
 
