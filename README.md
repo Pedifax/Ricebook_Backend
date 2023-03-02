@@ -1,6 +1,8 @@
 ![image-logo](image-logo.png)
 
-# Social Media Web App 2 - Backend
+# Ricebook - Social Media Web App
+
+### This is the back-end repor of Ricebook
 
 ### Links
 
