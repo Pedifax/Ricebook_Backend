@@ -16,6 +16,7 @@
 - Stores data in MongoDB
 - APIs that enable CRUD functionalities (for more information please see the bottom image)
 - Added a layer of security with bcrypt and JWT
+- Enabled image upload using Cloudinary
 
 ### Jasmine-node Test:
 
