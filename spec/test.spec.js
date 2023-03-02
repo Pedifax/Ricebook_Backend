@@ -42,7 +42,9 @@ describe("Backend tests:", () => {
       body: JSON.stringify(user),
     })
       .then((res) => {
-        sessionId = res.headers.get("set-cookie").split(";")[0].split("=")[1];
+        // sessionId = res.headers.get("set-cookie").split(";")[0].split("=")[1];
+        sessionId = res.headers.get("set-cookie");
+        console.log(sessionId);
         return res.json();
       })
       .then((res) => {
@@ -63,7 +65,8 @@ describe("Backend tests:", () => {
     };
     fetch(url("/article"), {
       method: "POST",
-      headers: { "Content-Type": "application/json", authorization: sessionId },
+      // headers: { "Content-Type": "application/json", authorization: sessionId },
+      headers: { "Content-Type": "application/json", cookie: sessionId },
       body: JSON.stringify(newArticle),
     })
       .then((res) => res.json())
@@ -76,13 +79,15 @@ describe("Backend tests:", () => {
       .then(() => {
         fetch(url("/articles"), {
           method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            authorization: sessionId,
-          },
+          // headers: {
+          //   "Content-Type": "application/json",
+          //   authorization: sessionId,
+          // },
+          headers: { "Content-Type": "application/json", cookie: sessionId },
         })
           .then((res) => res.json())
           .then((res) => {
+            // console.log(res);
             if (!(res.status === "success!")) {
               return done(new Error("Cannot fetch articles from testUser."));
             }
@@ -95,7 +100,8 @@ describe("Backend tests:", () => {
   it("Get articles from testUser (GET /articles/id, where id = username)", (done) => {
     fetch(url("/articles/testUser"), {
       method: "GET",
-      headers: { "Content-Type": "application/json", authorization: sessionId },
+      // headers: { "Content-Type": "application/json", authorization: sessionId },
+      headers: { "Content-Type": "application/json", cookie: sessionId },
     })
       .then((res) => res.json())
       .then((res) => {
@@ -110,10 +116,11 @@ describe("Backend tests:", () => {
   it("Get an article with post id (GET /articles/id, where id = post id, which we just created)", (done) => {
     fetch(url(`/articles/${createdPostId}`), {
       method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        authorization: sessionId,
-      },
+      // headers: {
+      //   "Content-Type": "application/json",
+      //   authorization: sessionId,
+      // },
+      headers: { "Content-Type": "application/json", cookie: sessionId },
     })
       .then((res) => res.json())
       .then((res) => {
@@ -131,7 +138,8 @@ describe("Backend tests:", () => {
     };
     fetch(url("/headline"), {
       method: "PUT",
-      headers: { "Content-Type": "application/json", authorization: sessionId },
+      // headers: { "Content-Type": "application/json", authorization: sessionId },
+      headers: { "Content-Type": "application/json", cookie: sessionId },
       body: JSON.stringify(headline),
     })
       .then((res) => res.json())
@@ -143,10 +151,11 @@ describe("Backend tests:", () => {
       .then(() => {
         fetch(url("/headline"), {
           method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            authorization: sessionId,
-          },
+          // headers: {
+          //   "Content-Type": "application/json",
+          //   authorization: sessionId,
+          // },
+          headers: { "Content-Type": "application/json", cookie: sessionId },
         })
           .then((res) => res.json())
           .then((res) => {
@@ -162,7 +171,8 @@ describe("Backend tests:", () => {
   it("Log out testUser", (done) => {
     fetch(url("/logout"), {
       method: "PUT",
-      headers: { "Content-Type": "application/json", authorization: sessionId },
+      // headers: { "Content-Type": "application/json", authorization: sessionId },
+      headers: { "Content-Type": "application/json", cookie: sessionId },
     }).then((res) => {
       expect(res.status).toBe(200);
       done();

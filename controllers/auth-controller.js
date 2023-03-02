@@ -2,13 +2,16 @@ const { validationResult, check } = require("express-validator");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const mongoose = require("mongoose");
+const { cloudinary } = require("../util/cloudinary");
+const fs = require("fs");
 
+const multerUpload = require("../middleware/multer-upload");
 const HttpError = require("../util/http-error");
 const User = require("../models/user");
 const Profile = require("../models/profile");
 const article = require("../models/article");
 
-let sessionUser = {};
+global.sessionUser = {};
 
 const generateSaltAndPassword = async (req, res, next, password) => {
   let generatedSalt, hashedPassword;
@@ -32,7 +35,8 @@ const login = async (req, res, next) => {
   try {
     targetUser = await User.findOne({ username: username });
   } catch (err) {
-    return next(new HttpError("Could not check targetUser. (login)", 500));
+    // return next(new HttpError("Could not check targetUser. (login)", 500));
+    return next(new HttpError("Error"));
   }
 
   if (!targetUser) {
@@ -76,10 +80,14 @@ const login = async (req, res, next) => {
     return next(error);
   }
 
-  sessionUser[username] = sessionId;
+  global.sessionUser[username] = sessionId;
 
   return res
-    .cookie("sessionId", sessionId, { httpOnly: true, sameSite: "None" })
+    .cookie("sessionId", sessionId, {
+      httpOnly: true,
+      sameSite: "None",
+      secure: true,
+    })
     .json({
       status: "success!",
       result: "success",
@@ -96,21 +104,44 @@ const register = async (req, res, next) => {
 
   if (!errors.isEmpty()) {
     return next(
-      new HttpError("Invalid data . Please check you inputs. (register)")
+      // new HttpError("Invalid data . Please check you inputs. (register)")
+      new HttpError("Invalid data.")
     );
   }
 
-  const { username, email, password, phone, zip, avatar, dob } = req.body;
+  let avatar;
+  const { username, password, email, phone, zip, dob } = req.body;
 
   let existingUser;
   try {
     existingUser = await User.findOne({ username: username });
   } catch (err) {
-    return next(new HttpError("Could not check existingUser. (register)", 500));
+    // return next(new HttpError("Could not check existingUser. (register)", 500));
+    return next(new HttpError("Error", 500));
   }
   if (existingUser) {
-    const error = new HttpError("User exists already. (register)", 422);
-    return next(error);
+    // const error = new HttpError("User exists already. (register)", 422);
+    // return next(error);
+    return next(new HttpError("Error"));
+  }
+
+  try {
+    // const imageFile = req.file.path; // relative path on server
+    const imageFile = req.fileurl; // relative path on server
+    const uploadResponse = await cloudinary.uploader.upload(imageFile);
+    // console.log(uploadResponse);
+    avatar = uploadResponse.url;
+
+    // fs.unlink the image from this server
+    // fs.unlink(imageFile, (err) => {
+    //   if (err) {
+    //     console.log("error occured when unlinking an image. (register)");
+    //   }
+    // });
+  } catch (err) {
+    console.log(err);
+    // return next(new HttpError("Cannot upload image. (register)", 500));
+    return next(new HttpError("Error"));
   }
 
   let { generatedSalt, hashedPassword } = await generateSaltAndPassword(
@@ -131,13 +162,16 @@ const register = async (req, res, next) => {
   const createdProfile = new Profile({
     username,
     displayName: `--- default DISPLAY NAME for ${username} ---`,
-    headline: `--- default HEADLINE for ${username} ---`,
+    headline: `Share your status?`,
     email,
     phone,
     zip,
     avatar,
-    dob,
   });
+
+  if (dob) {
+    createdProfile.dob = dob;
+  }
 
   try {
     const sess = await mongoose.startSession();
@@ -171,10 +205,14 @@ const register = async (req, res, next) => {
     return next(error);
   }
 
-  sessionUser[username] = sessionId;
+  global.sessionUser[username] = sessionId;
 
   return res
-    .cookie("sessionId", sessionId, { httpOnly: true, sameSite: "None" })
+    .cookie("sessionId", sessionId, {
+      httpOnly: true,
+      sameSite: "None",
+      secure: true,
+    })
     .json({
       function: "reigster",
       status: "success!",
@@ -186,8 +224,8 @@ const register = async (req, res, next) => {
 };
 
 const isLoggedIn = (req, res, next) => {
-  const sessionId = req.headers.authorization;
-
+  // const sessionId = req.headers.authorization;
+  const sessionId = req.cookies["sessionId"];
   if (!sessionId) {
     return next(
       new HttpError(
@@ -221,14 +259,19 @@ const isLoggedIn = (req, res, next) => {
     );
   }
 
-  if (sessionId === sessionUser[decodedSessionId.username]) {
-    // authenticated successfully
+  if (sessionId === global.sessionUser[decodedSessionId.username]) {
+    if (req.headers.isautologin) {
+      return res.json({
+        message: "success",
+        username: decodedSessionId.username,
+      });
+    }
     req.userData = {
       userId: decodedSessionId.userId,
       username: decodedSessionId.username,
     };
     next();
-  } else if (!(decodedSessionId.username in sessionUser)) {
+  } else if (!(decodedSessionId.username in global.sessionUser)) {
     // no log in record
     return next(
       new HttpError(
@@ -237,7 +280,7 @@ const isLoggedIn = (req, res, next) => {
       )
     );
   } else {
-    // the key is in sessionUser but value mismatch
+    // the key is in global.sessionUser but value mismatch
     return next(
       new HttpError(
         "A newer log in record detected. This sessionId is expired. Please log in again instead. (isLoggedIn())",
@@ -250,7 +293,7 @@ const isLoggedIn = (req, res, next) => {
 const logout = (req, res, next) => {
   let userToLogOut = req.userData.username;
   req.userData = {};
-  delete sessionUser[userToLogOut];
+  delete global.sessionUser[userToLogOut];
   res.clearCookie("sessionId");
   res.status(200).json({ message: `OK. logged out ${userToLogOut}` });
 };
@@ -330,6 +373,8 @@ module.exports = (app) => {
   app.post("/login", login);
   app.post(
     "/register",
+    // multerUpload.single("image"),
+    multerUpload("image"),
     [
       check("username").not().isEmpty(),
       check("email").normalizeEmail().isEmail(), // normalize = TeSt -> test
@@ -338,6 +383,7 @@ module.exports = (app) => {
     register
   );
   app.delete("/delete/:username", deleteAccount);
+  app.get("/auto_login", isLoggedIn);
   app.use(isLoggedIn);
   app.put("/logout", logout);
   app.put("/password", updatePassword);

@@ -1,6 +1,9 @@
 const { validationResult, check } = require("express-validator");
 const mongoose = require("mongoose");
+const { cloudinary } = require("../util/cloudinary");
+const fs = require("fs");
 
+const multerUpload = require("../middleware/multer-upload");
 const HttpError = require("../util/http-error");
 const User = require("../models/user");
 const Profile = require("../models/profile");
@@ -24,10 +27,25 @@ const getUserProfile = async (req, res, next) => {
   return userProfile;
 };
 
+const getProfileObject = async (req, res, next) => {
+  let userProfile = await getUserProfile(req, res, next);
+  if (!userProfile) {
+    // return next(new HttpError("Could not find this user."));
+    return next(new HttpError("Error"));
+  }
+  userProfile = userProfile.toObject({ getters: true });
+  return res.json({
+    status: "success!",
+    function: "getProfileObject",
+    profileObject: userProfile,
+  });
+};
+
 const getHeadline = async (req, res, next) => {
   let userProfile = await getUserProfile(req, res, next);
   if (!userProfile) {
-    return next(new HttpError("Could not find this user."));
+    // return next(new HttpError("Could not find this user."));
+    return next(new HttpError("Error"));
   }
 
   userProfile = userProfile.toObject({ getters: true });
@@ -43,7 +61,8 @@ const getHeadline = async (req, res, next) => {
 const getEmail = async (req, res, next) => {
   let userProfile = await getUserProfile(req, res, next);
   if (!userProfile) {
-    return next(new HttpError("Could not find this user."));
+    // return next(new HttpError("Could not find this user."));
+    return next(new HttpError("Error"));
   }
   userProfile = userProfile.toObject({ getters: true });
 
@@ -58,7 +77,8 @@ const getEmail = async (req, res, next) => {
 const getZip = async (req, res, next) => {
   let userProfile = await getUserProfile(req, res, next);
   if (!userProfile) {
-    return next(new HttpError("Could not find this user."));
+    // return next(new HttpError("Could not find this user."));
+    return next(new HttpError("Error"));
   }
   userProfile = userProfile.toObject({ getters: true });
 
@@ -73,7 +93,8 @@ const getZip = async (req, res, next) => {
 const getAvatar = async (req, res, next) => {
   let userProfile = await getUserProfile(req, res, next);
   if (!userProfile) {
-    return next(new HttpError("Could not find this user."));
+    // return next(new HttpError("Could not find this user."));
+    return next(new HttpError("Error"));
   }
   userProfile = userProfile.toObject({ getters: true });
 
@@ -88,7 +109,8 @@ const getAvatar = async (req, res, next) => {
 const getDob = async (req, res, next) => {
   let userProfile = await getUserProfile(req, res, next);
   if (!userProfile) {
-    return next(new HttpError("Could not find this user."));
+    // return next(new HttpError("Could not find this user."));
+    return next(new HttpError("Error"));
   }
   userProfile = userProfile.toObject({ getters: true });
   let millisecond = new Date(userProfile.dob);
@@ -114,7 +136,8 @@ const updateHeadline = async (req, res, next) => {
 
   let userProfile = await getUserProfile(req, res, next);
   if (!userProfile) {
-    return next(new HttpError("Could not find this user."));
+    // return next(new HttpError("Could not find this user."));
+    return next(new HttpError("Error"));
   }
 
   const { headline } = req.body;
@@ -144,13 +167,15 @@ const updateEmail = async (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     return next(
-      new HttpError("Please input a valid email address. (updateEmail)")
+      // new HttpError("Please input a valid email address. (updateEmail)")
+      new HttpError("Error")
     );
   }
 
   let userProfile = await getUserProfile(req, res, next);
   if (!userProfile) {
-    return next(new HttpError("Could not find this user."));
+    // return next(new HttpError("Could not find this user."));
+    return next(new HttpError("Error"));
   }
 
   const { email } = req.body;
@@ -179,12 +204,14 @@ const updateEmail = async (req, res, next) => {
 const updateZip = async (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    return next(new HttpError("Please input a valid zipcode. (updateZipcode)"));
+    // return next(new HttpError("Please input a valid zipcode. (updateZipcode)"));
+    return next(new HttpError("Error"));
   }
 
   let userProfile = await getUserProfile(req, res, next);
   if (!userProfile) {
-    return next(new HttpError("Could not find this user."));
+    // return next(new HttpError("Could not find this user."));
+    return next(new HttpError("Error"));
   }
 
   const { zipcode } = req.body;
@@ -214,17 +241,79 @@ const updateAvatar = async (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     return next(
-      new HttpError("Please input a valid avatar url. (updateZipcode)")
+      // new HttpError("Please input a valid avatar url. (updateZipcode)")
+      new HttpError("Error")
     );
   }
 
   let userProfile = await getUserProfile(req, res, next);
   if (!userProfile) {
-    return next(new HttpError("Could not find this user."));
+    // return next(new HttpError("Could not find this user."));
+    return next(new HttpError("Error"));
+  }
+  console.log(req.file);
+  // upload to cloudinary
+  try {
+    // const imageFile = req.file.path; // relative path on server
+    // const imageFile = req.file.buffer; // relative path on server
+    const imageFile = req.fileurl; // relative path on server
+    const uploadResponse = await cloudinary.uploader.upload(imageFile);
+    // console.log(uploadResponse);
+    userProfile.avatar = uploadResponse.url;
+
+    // fs.unlink the image from this server
+    // fs.unlink(imageFile, (err) => {
+    //   if (err) {
+    //     console.log("error occured when unlinking an image. (createArticle)");
+    //   }
+    // });
+  } catch (err) {
+    console.log(err);
+    return next(
+      new HttpError(
+        "Cannot upload image. (profile-controller > updateAvatar)",
+        500
+      )
+    );
   }
 
-  const { avatar } = req.body;
-  userProfile.avatar = avatar;
+  try {
+    await userProfile.save();
+  } catch (err) {
+    return next(
+      new HttpError(
+        err + ". Something went wrong. (updateAvatar > save())",
+        500
+      )
+    );
+  }
+
+  res.json({
+    status: "success!",
+    function: "updateHeadline",
+    username: userProfile.username,
+    avatar: userProfile.avatar,
+  });
+};
+
+const updateProfile = async (req, res, next) => {
+  let userProfile = await getUserProfile(req, res, next);
+  if (!userProfile) {
+    // return next(new HttpError("Could not find this user."));
+    return next(new HttpError("Error"));
+  }
+
+  const { email, phone, zip } = req.body;
+
+  if (email && email.length > 0) {
+    userProfile.email = email;
+  }
+  if (phone && phone.length > 0) {
+    userProfile.phone = phone;
+  }
+  if (zip && zip.length > 0) {
+    userProfile.zip = zip;
+  }
 
   try {
     await userProfile.save();
@@ -240,13 +329,13 @@ const updateAvatar = async (req, res, next) => {
 
   res.json({
     status: "success!",
-    function: "updateHeadline",
-    username: userProfile.username,
-    avatar: userProfile.avatar,
+    function: "updateProfile",
+    userProfile,
   });
 };
 
 module.exports = (app) => {
+  app.get("/profile", getProfileObject);
   app.get("/headline/:user?", getHeadline);
   app.get("/email/:user?", getEmail);
   app.get("/zipcode/:user?", getZip);
@@ -267,5 +356,6 @@ module.exports = (app) => {
     ],
     updateZip
   );
-  app.put("/avatar", [check("avatar").trim().not().isEmpty()], updateAvatar);
+  app.put("/avatar", multerUpload("image"), updateAvatar);
+  app.put("/profile", updateProfile);
 };

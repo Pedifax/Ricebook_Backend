@@ -23,21 +23,28 @@ const getUserObject = async (req, res, next) => {
   return userObject;
 };
 
-const getFollowings = async (req, res, next) => {
+const getFollowing = async (req, res, next) => {
   let userObject = await getUserObject(req, res, next);
   if (!userObject) {
-    return next(new HttpError("Could not find this user."));
+    // return next(new HttpError("Could not find this user."));
+    return next(new HttpError("Error"));
   }
 
   let followingUsernames = userObject.followedUsers.map(
     (user) => user.username
   );
+  let followingList = userObject.followedUsers.map((user) =>
+    user.toObject({ getters: true })
+  );
+
+  // TODO take away the password and salt from users in followingList
 
   res.json({
     status: "success!",
-    function: "getFollowings()",
+    function: "getFollowing()",
     username: userObject.username,
     following: followingUsernames,
+    followingList,
   });
 };
 
@@ -49,6 +56,7 @@ const follow = async (req, res, next) => {
   if (!targetUser) {
     return next(
       new HttpError("Could not find the user to follow. (follow > targetUser)")
+      // new HttpError("Error")
     );
   }
 
@@ -57,13 +65,15 @@ const follow = async (req, res, next) => {
   } catch (err) {
     return next(
       new HttpError(
-        err + ". Could not search for the loggedInUser. (follow > loggedInUser)"
+        // err + ". Could not search for the loggedInUser. (follow > loggedInUser)"
+        "Error"
       )
     );
   }
   if (!loggedInUser) {
     return next(
-      new HttpError("Could not find the loggedInUser object. (follow)")
+      // new HttpError("Could not find the loggedInUser object. (follow)")
+      new HttpError("Error")
     );
   }
 
@@ -121,7 +131,8 @@ const unfollow = async (req, res, next) => {
   }
   if (!loggedInUser) {
     return next(
-      new HttpError("Could not find the loggedInUser object. (follow)")
+      // new HttpError("Could not find the loggedInUser object. (follow)")
+      new HttpError("Error")
     );
   }
 
@@ -160,7 +171,7 @@ const unfollow = async (req, res, next) => {
 };
 
 module.exports = (app) => {
-  app.get("/following/:user?", getFollowings);
+  app.get("/following/:user?", getFollowing);
   app.put("/following/:user", follow);
   app.delete("/following/:user", unfollow);
 };
