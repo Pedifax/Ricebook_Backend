@@ -2,7 +2,7 @@
 
 # Ricebook - Social Media Web App
 
-### This is the back-end repor of Ricebook
+### This is the back-end repo of Ricebook
 
 ### Links
 
